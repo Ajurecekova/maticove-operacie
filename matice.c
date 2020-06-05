@@ -38,22 +38,27 @@ MAT *mat_create_by_file(char * filename){
 	float *elem;
 	a =(MAT*)malloc(sizeof(MAT));
 	elem = (float*)malloc(sizeof(float)*b*d);
-	if( (fd = open(O_BINARY | O_RDONLY, filename)) < 0 )
+	if( (fd = open(filename, O_BINARY | O_RDONLY)) < 0 )
 		{
-		fprintf(stderr, "File access problem.\n");
+		perror("c1");
 		exit(1);
 		}
+	printf("file open\n");
 	lseek(fd,2,SEEK_SET);
-	b=read(fd,r,1);
-	a->rows=b;
-	d=read(fd,c,1);
-	a->cols=d;
-	for (i=0;i<b*d;i++)
-		a->elem[i]=read(fd,elem,1);
+	b=read(fd,r,sizeof(unsigned int));
+	a->rows = r;
+	printf("%d\n",r);
+	d=read(fd,c,sizeof(unsigned int));
+	a->cols = c;
+	printf("%d\n",a->cols);
+	read(fd,elem,sizeof(float)*a->cols*a->rows);
+	a->elem = elem;
+	printf("%d",a->elem);
 	if (a == 0 || elem == 0){
 		free(a);
 		free(elem);
 		close(fd);
+		printf("nepodarilo sa najst pamat");
 		return 0;
 	}
 	else{
@@ -66,17 +71,16 @@ char mat_save(MAT *mat,char *filename){
 	char pole[2];
 	pole[0] = 'M';
 	pole[1] = '1';
-	if( (fd = open(filename, O_BINARY | O_RDONLY)) < 0 )
+	if( (fd = open(filename, O_BINARY | O_WRONLY | O_CREAT)) < 0 )
 		{
 		perror("c1");
 		exit(1);
 		}
-	printf("file opened");
-	write(fd,"M",sizeof(char));
-	write(fd,"1",sizeof(char));
-	write(fd,mat->rows,sizeof(unsigned int));
-	write(fd,mat->cols,sizeof(unsigned int));
-	write(fd,mat->elem,sizeof(float)* (mat->rows)* (mat->cols));
+	printf("file open\n");
+	write(fd,pole,sizeof(char)*2);
+	write(fd,&(mat->rows),sizeof(unsigned int));
+	write(fd,&(mat->cols),sizeof(unsigned int));
+	write(fd,&(mat->elem),sizeof(float)* (mat->rows)* (mat->cols));
 	close(fd);
 	return 0;
 }
@@ -115,9 +119,9 @@ void mat_print(MAT *mat){
 
 int main(){
 	srand(time(NULL));
-	MAT *a = mat_create_with_type(7,7);
-	mat_random(a);
-	mat_save(a,"matica.dat");
+	//MAT *a = mat_create_with_type(7,7);
+	//mat_random(a);
+	MAT *a = mat_create_by_file("matice.dat");
 	mat_print(a);
 	mat_destroy(a);
 }
