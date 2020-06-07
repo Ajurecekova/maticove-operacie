@@ -1,9 +1,9 @@
-# include <stdio.h>
-# include <stdlib.h>
-# include <math.h>
-# include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <unistd.h>
 #include <fcntl.h>
-# include <time.h>
+#include <time.h>
 
 #ifndef O_BINARY
 #define O_BINARY 0
