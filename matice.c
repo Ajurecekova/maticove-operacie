@@ -71,7 +71,7 @@ char mat_save(MAT *mat,char *filename){
 	char pole[2];
 	pole[0] = 'M';
 	pole[1] = '1';
-	if( (fd = open(filename, O_BINARY | O_WRONLY | O_CREAT)) < 0 )
+	if( (fd = open(filename, O_WRONLY | O_CREAT)) < 0 )
 		{
 		perror("c1");
 		exit(1);
@@ -119,9 +119,9 @@ void mat_print(MAT *mat){
 
 int main(){
 	srand(time(NULL));
-	//MAT *a = mat_create_with_type(7,7);
-	//mat_random(a);
-	MAT *a = mat_create_by_file("matice.dat");
+	MAT *a = mat_create_with_type(7,7);
+	mat_random(a);
+	mat_save(a,"matica.dat");
 	mat_print(a);
 	mat_destroy(a);
 }
