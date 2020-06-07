@@ -5,6 +5,10 @@
 #include <fcntl.h>
 # include <time.h>
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 typedef struct{
 	unsigned int rows;
 	unsigned int cols;
