@@ -8,6 +8,7 @@
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
+#define ELEM(M,r,c) (M->elem[(M->cols)*r+c])
 
 typedef struct{
 	unsigned int rows;
@@ -18,73 +19,80 @@ typedef struct{
 MAT *mat_create_with_type(unsigned int rows, unsigned int cols){
 	MAT *a;
 	float *elem;
+	
 	a =(MAT*)malloc(sizeof(MAT));
+	if (a==0)
+		return 0;
 	elem = (float*)malloc(sizeof(float)*rows*cols);
+	if (elem == 0){
+		free(a);
+		return 0;
+	}
+	
 	a->rows = rows;
 	a->cols = cols;
 	a->elem = elem;
-	if (a == 0 || elem == 0){
-		free(a);
-		free(elem);
-		return 0;
-	}
-	else
+	
 	return a;
 }
 
 MAT *mat_create_by_file(char * filename){
 	MAT *a;
-	unsigned int b,d,e;
+	unsigned int b,d;
 	int fd;
-	int i;
 	unsigned int *r;
 	unsigned int *c;
 	float *elem;
+	
 	a =(MAT*)malloc(sizeof(MAT));
+	if (a==0)
+		return 0;
 	elem = (float*)malloc(sizeof(float)*b*d);
-	if( (fd = open(filename, O_BINARY | O_RDONLY)) < 0 )
-		{
-		perror("c1");
-		exit(1);
-		}
-	printf("file open\n");
-	lseek(fd,2,SEEK_SET);
-	b=read(fd,r,sizeof(unsigned int));
-	a->rows = r;
-	printf("%d\n",r);
-	d=read(fd,c,sizeof(unsigned int));
-	a->cols = c;
-	printf("%d\n",a->cols);
-	read(fd,elem,sizeof(float)*a->cols*a->rows);
-	a->elem = elem;
-	printf("%d",a->elem);
-	if (a == 0 || elem == 0){
+	if (elem == 0){
 		free(a);
-		free(elem);
-		close(fd);
-		printf("nepodarilo sa najst pamat");
 		return 0;
 	}
-	else{
+	
+	if( (fd = open(filename, O_BINARY | O_RDONLY)) < 0 )
+		{
+		fprintf(stderr, "File access problem.\n");
+		exit(1);
+		}
+	
+	r=&b;
+	c=&d;
+	lseek(fd,2,SEEK_SET);
+	b=read(fd,r,sizeof(unsigned int));
+	a->rows = *r;
+
+	d=read(fd,c,sizeof(unsigned int));
+	a->cols = *c;
+	
+	read(fd,elem,sizeof(float)*(a->cols)*(a->rows));
+	a->elem = elem;
 	close(fd);
-	return(a);}
+	return(a);
+		
 }
 
 char mat_save(MAT *mat,char *filename){
 	int fd;
 	char pole[2];
+	
 	pole[0] = 'M';
 	pole[1] = '1';
-	if( (fd = open(filename, O_WRONLY | O_CREAT)) < 0 )
+	
+	if( (fd = open(filename,O_BINARY | O_WRONLY | O_CREAT)) < 0 )
 		{
-		perror("c1");
+		fprintf(stderr, "File access problem.\n");
 		exit(1);
 		}
-	printf("file open\n");
+	
 	write(fd,pole,sizeof(char)*2);
 	write(fd,&(mat->rows),sizeof(unsigned int));
 	write(fd,&(mat->cols),sizeof(unsigned int));
 	write(fd,&(mat->elem),sizeof(float)* (mat->rows)* (mat->cols));
+	
 	close(fd);
 	return 0;
 }
@@ -92,10 +100,12 @@ char mat_save(MAT *mat,char *filename){
 
 void mat_destroy(MAT *mat){
 	free(mat);
+	free(&(mat->elem));
 }
 
 void mat_unit(MAT *mat){
 	int i,j;
+	
 	for (i=0;i<mat->rows*mat->cols;i++){
 		if (i%(mat->cols+1)==0)
 		mat->elem[i]=1;
@@ -107,13 +117,16 @@ void mat_unit(MAT *mat){
 
 void mat_random(MAT *mat){
 	int i;
+	
 	for (i=0;i<mat->rows*mat->cols;i++){
-		mat->elem[i]=(rand()%3)-1;
+		mat->elem[i]=(((float)rand()/(float)(RAND_MAX))*2)-1;
 	}
 	
 }
 void mat_print(MAT *mat){
 	int i;
+	printf("%d\n",mat->rows);
+	printf("%d\n",mat->cols);
 	for (i=1;i<=mat->rows*mat->cols;i++){
 		printf("%f ",mat->elem[i-1]);
 		if (i!=0 && i%(mat->cols)==0)
@@ -123,9 +136,10 @@ void mat_print(MAT *mat){
 
 int main(){
 	srand(time(NULL));
-	MAT *a = mat_create_with_type(7,7);
-	mat_random(a);
-	mat_save(a,"matica.dat");
+	MAT *a = mat_create_by_file("matica.dat");
+	//MAT *a = mat_create_with_type(6,4);
+	//mat_random(a);
+	//mat_save(a,"matica.dat");
 	mat_print(a);
 	mat_destroy(a);
 }
