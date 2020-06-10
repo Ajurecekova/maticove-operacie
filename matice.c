@@ -91,13 +91,10 @@ char mat_save(MAT *mat,char *filename){
 	return 0;
 }
 
-
 void mat_destroy(MAT *mat){
 	free(mat);
 	free(&(mat->elem));
 }
-
-
 
 void mat_unit(MAT *mat){
 	int i,j;
@@ -111,9 +108,6 @@ void mat_unit(MAT *mat){
 	
 }
 
-
-
-
 void mat_random(MAT *mat){
 	int i;
 	
@@ -123,8 +117,6 @@ void mat_random(MAT *mat){
 	
 }
 
-
-
 void mat_cele(MAT *mat){
 	int i;
 	
@@ -132,9 +124,6 @@ void mat_cele(MAT *mat){
 		mat->elem[i]=rand()%6;
 	}
 }
-
-
-
 
 void mat_print(MAT *mat){
 	int i;
@@ -147,9 +136,6 @@ void mat_print(MAT *mat){
 		printf("\n");
 	}
 }
-
-
-
 
 char mat_division (MAT *a, MAT *b ,MAT *c){
 	int i,j,k,l,m,t;
@@ -186,12 +172,10 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 			}
 		}
 	}
-		for (i=1;i<=p->rows*p->cols;i++){
-		printf("%f ",p->elem[i-1]);
-		if (i!=0 && i%(p->cols)==0)
-		printf("\n");
-	}
-	printf("\n");
+
+    printf("\nMatica p:\n");
+    mat_print(p);
+
 //ak je nula na diagonale	
    float temp=0;
    for(i=0; i<p->rows; i++){
@@ -224,12 +208,8 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
        }
 	   }
 	
-	for (i=1;i<=p->rows*p->cols;i++){
-		printf("%f ",p->elem[i-1]);
-		if (i!=0 && i%(p->cols)==0)
-		printf("\n");
-	}
-	printf("\n");
+    printf("\nMatica p:\n");
+    mat_print(p);
 	
 	for(k=p->cols-1; k>=0; k--){
 	    for(i=k-1; i>=0; i--){
@@ -241,16 +221,12 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
         }
 	}
 	
-	for (i=1;i<=p->rows*p->cols;i++){
-		printf("%f ",p->elem[i-1]);
-		if (i!=0 && i%(p->cols)==0)
-		printf("\n");
-	}
-	printf("\n");
-	for (i=1;i<=b->rows*b->cols;i++){
-		printf("%f ",b->elem[i-1]);
-	}
-	printf("\n");
+    printf("\nMatica p:\n");
+    mat_print(p);
+
+    printf("\nMatica b:\n");
+    mat_print(b);
+
 //vypocet prvkov matice c
 	for (i=0;i<p->rows;i++){
 		for (j=0;j<p->cols;j++){
@@ -259,13 +235,6 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 			}
 		}
 	}
-	printf("\n");
-	for (i=1;i<=c->rows*c->cols;i++){
-		printf("%f ",c->elem[i-1]);
-		if (i!=0 && i%(c->cols)==0)
-		printf("\n");
-	}
-
 }
 
 int main(){
@@ -286,7 +255,7 @@ int main(){
 	//MAT *b = mat_create_by_file("matica.bin");
 	//mat_print(b);
 	mat_print(c);
-	mat_destroy(a);
-	mat_destroy(b);
-	mat_destroy(c);
+//	mat_destroy(a);
+//	mat_destroy(b);
+//	mat_destroy(c);
 }
