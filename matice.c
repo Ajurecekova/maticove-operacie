@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -37,38 +38,31 @@ MAT *mat_create_with_type(unsigned int rows, unsigned int cols){
 }
 
 MAT *mat_create_by_file(char * filename){
-	MAT *a;
-	unsigned int b,d;
+	unsigned int i,j;
 	int fd;
 	unsigned int r;
 	unsigned int c;
-	float *elem;
+	float elem;
 	
-	a =(MAT*)malloc(sizeof(MAT));
-	if (a==0)
-		return 0;
-	elem = (float*)malloc(sizeof(float)*b*d);
-	if (elem == 0){
-		free(a);
-		return 0;
-	}
 	
-	if( (fd = open(filename, O_RDONLY)) < 0 )
+	
+	if( (fd = open(filename,O_BINARY | O_RDONLY)) < 0 )
 		{
-		fprintf(stderr, "File access problem.\n");
+		fprintf(stderr, "File access problem_CREATE.\n");
 		exit(1);
 		}
 
 	lseek(fd,2*sizeof(char),SEEK_SET);
 	read(fd,&r,sizeof(unsigned int));
-	printf("%d\n",r);
-	a->rows = r;
-
 	read(fd,&c,sizeof(unsigned int));
-	a->cols = c;
+	MAT *a = mat_create_with_type(r,c);
+	for(i=0;i<a->rows;i++){
+		for(j=0;j<a->cols;j++){
+			read(fd,&elem,sizeof(float));
+			ELEM(a,i,j)=elem;
+		}
+	}
 	
-	read(fd,elem,sizeof(float)*(a->cols)*(a->rows));
-	a->elem = elem;
 	close(fd);
 	return(a);
 		
@@ -81,14 +75,16 @@ char mat_save(MAT *mat,char *filename){
 	pole[0] = 'M';
 	pole[1] = '1';
 	
-	if( (fd = open(filename, O_WRONLY | O_CREAT)) < 0 )
+	if( (fd = open(filename,O_BINARY | O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR)) < 0 )
 		{
-		fprintf(stderr, "File access problem.\n");
+		fprintf(stderr, "File access problem_SAVE.\n");
 		exit(1);
 		}
 	
 	write(fd,pole,sizeof(char)*2);
-	write(fd,&mat,(MAT*)malloc(sizeof(MAT)));
+	write(fd,&(mat->rows),sizeof(unsigned int));
+	write(fd,&(mat->cols),sizeof(unsigned int));
+	write(fd,(mat->elem),sizeof(float)* (mat->rows)* (mat->cols));
 	
 	
 	close(fd);
@@ -100,6 +96,8 @@ void mat_destroy(MAT *mat){
 	free(mat);
 	free(&(mat->elem));
 }
+
+
 
 void mat_unit(MAT *mat){
 	int i,j;
@@ -113,6 +111,9 @@ void mat_unit(MAT *mat){
 	
 }
 
+
+
+
 void mat_random(MAT *mat){
 	int i;
 	
@@ -121,6 +122,9 @@ void mat_random(MAT *mat){
 	}
 	
 }
+
+
+
 void mat_cele(MAT *mat){
 	int i;
 	
@@ -128,21 +132,45 @@ void mat_cele(MAT *mat){
 		mat->elem[i]=rand()%6;
 	}
 }
+
+
+
+
 void mat_print(MAT *mat){
 	int i;
-	printf("%d\n",mat->rows);
-	printf("%d\n",mat->cols);
-	for (i=1;i<=mat->rows*mat->cols;i++){
-		printf("%f ",mat->elem[i-1]);
+	printf("riadky: %d\n",mat->rows);
+	printf("stlpce: %d\n",mat->cols);
+	puts("");
+	for (i=1;i<=(mat->rows)*(mat->cols);i++){
+		printf("%5.2f ",mat->elem[i-1]);
 		if (i!=0 && i%(mat->cols)==0)
 		printf("\n");
 	}
 }
 
+
+
+
 char mat_division (MAT *a, MAT *b ,MAT *c){
-	int i,j,k,l,m;
+	int i,j,k,l,m,t;
 	MAT *p = mat_create_with_type(b->rows*b->cols,a->cols*b->cols);
 	
+	for(i=0;i<a->rows;i++){
+		t=0;
+		for(j=0;j<a->cols;j++){
+			t+=ELEM(a,i,j);
+		}
+		if (t==0)
+		return 0;
+	}
+	for(i=0;i<a->cols;i++){
+		t=0;
+		for(j=0;j<a->rows;j++){
+			t+=ELEM(a,j,i);
+		}
+		if (t==0)
+		return 0;
+	}
 	
 //matica na vypocet sustavy rovnic
 	for (i=0;i<p->rows;i++){
@@ -151,10 +179,10 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 		}
 	}
 	
-	for(k=0;k<b->rows;k++){
+	for(k=0;k<a->rows;k++){
 		for (i=0;i<b->cols;i++){
-			for (j=0;j<c->cols;j++){
-				ELEM(p,(((b->cols)*k)+i),j*b->cols+i) = ELEM(a,k,j);
+			for (j=0;j<c->rows;j++){
+				ELEM(p,(((b->cols)*k)+i),j*(b->cols)+i) = ELEM(a,k,j);
 			}
 		}
 	}
@@ -222,11 +250,12 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 	for (i=1;i<=b->rows*b->cols;i++){
 		printf("%f ",b->elem[i-1]);
 	}
+	printf("\n");
 //vypocet prvkov matice c
 	for (i=0;i<p->rows;i++){
 		for (j=0;j<p->cols;j++){
 			if(i==j){
-				c->elem[i]=b->elem[i]/ELEM(p,i,j);
+				c->elem[i] = b->elem[i]/ELEM(p,i,j);
 			}
 		}
 	}
@@ -236,13 +265,12 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 		if (i!=0 && i%(c->cols)==0)
 		printf("\n");
 	}
-	return c;
 
 }
 
 int main(){
 	srand(time(NULL));
-	//MAT *a = mat_create_by_file("matica.dat");
+	//MAT *a = mat_create_by_file("matica.bin");
 	MAT *a = mat_create_with_type(3,3);
 	MAT *b = mat_create_with_type(3,3);
 	MAT *c = mat_create_with_type(3,3);
@@ -253,7 +281,10 @@ int main(){
 	mat_division(a,b,c);
 	//mat_random(a);
 	//mat_print(a);
-	//mat_save(a,"matica.txt");
+	//mat_save(a,"matica.bin");
+	
+	//MAT *b = mat_create_by_file("matica.bin");
+	//mat_print(b);
 	mat_print(c);
 	mat_destroy(a);
 	mat_destroy(b);
