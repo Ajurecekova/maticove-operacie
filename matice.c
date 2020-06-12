@@ -140,8 +140,7 @@ void mat_unit(MAT *mat){
 	for (i=0;i<mat->rows*mat->cols;i++){
 		if (i%(mat->cols+1)==0)
 			mat->elem[i]=1;
-		else
-            mat->elem[i]=0;
+		else mat->elem[i]=0;
 	
 	}
 	
@@ -179,34 +178,33 @@ void mat_print(MAT *mat){
 	puts("");
 	for (i=1;i<=(mat->rows)*(mat->cols);i++){
 		printf("%5.2f ",mat->elem[i-1]);
-        if (i!=0 && i%(mat->cols)==0)
-            printf("\n");
+			if (i!=0 && i%(mat->cols)==0)
+				printf("\n");
 	}
 }
 char nula_na_diagonale(MAT *p,MAT *b){
-    int i,j,k;
-    float temp;
-
-    for(i=0; i<p->rows; i++){
-        if(ELEM(p,i,i)==0){
-            for(j=0; j<p->cols; j++){
-                if(j==i) 
-                    continue;
-
-                if(ELEM(p,j,i) !=0 && ELEM(p,i,j)!=0){
-                    for(k=0; k<p->rows; k++){
-                        temp = ELEM(p,j,k);
-                        ELEM(p,j,k) = ELEM(p,i,k);
-                        ELEM(p,i,k) = temp;
-                    }
-                    temp = b->elem[j];
-                    b->elem[j] = b->elem[i];
-                    b->elem[i] = temp;
-                    break;
-                }
-            }
-        }
-    }
+	int i,j,k;
+	float temp;
+	   for(i=0; i<p->rows; i++){
+	       if(ELEM(p,i,i)==0){
+			   for(j=0; j<p->cols; j++){
+			       if(j==i) 
+						continue;
+			       if(ELEM(p,j,i) !=0 && ELEM(p,i,j)!=0){
+					   for(k=0; k<p->rows; k++){
+					       temp = ELEM(p,j,k);
+					       ELEM(p,j,k) = ELEM(p,i,k);
+					       ELEM(p,i,k) = temp;
+					   }
+					   temp = b->elem[j];
+					   b->elem[j] = b->elem[i];
+					   b->elem[i] = temp;
+					   break;
+			       }
+		   }
+	       }
+   }
+   	
 }
 
 
@@ -215,26 +213,21 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 	int i,j,k,l,m,t;
 	float B,M, temp=0;
 	MAT *p = mat_create_with_type(b->rows*b->cols,a->cols*b->cols);
-<<<<<<< HEAD
-	/*if (p == NULL){
+	if (p == NULL){
 		return 0;
-	}*/
+	}
 	for(i=0;i<c->rows;i++){
-=======
-
-    for(i=0;i<c->rows;i++){
->>>>>>> 3667b4915f74dc0214477c8aa6c1934c0b6c58e7
 		for(j=0;j<c->cols;j++){
 			ELEM(c,i,j)=0;
 		}
 	}
-
 	if (c->rows!=a->cols || c->cols!=b->cols || c->rows!=b->rows){
 		return 0;
 		mat_destroy(p);
 	}
+	
 		
-    //obmedzila som maticu c tak ze musi byt rovnakeho typu ako matica b pretoze inak by mi nevznikalo n rovnic o n neznamych a to vytvara problemy
+//obmedzila som maticu c tak ze musi byt rovnakeho typu ako matica b pretoze inak by mi nevznikalo n rovnic o n neznamych a to vytvara problemy
 	for(i=0;i<a->rows;i++){
 		t=0;
 		for(j=0;j<a->cols;j++){
@@ -257,9 +250,10 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 		return 0;
 		mat_destroy(p);}
 	}
-    //v matici a sa nemozu nachadzat nulove riadku ani nulove stlpce lebo by tym padom neboli linearne nezavisle
+//v matici a sa nemozu nachadzat nulove riadku ani nulove stlpce lebo by tym padom neboli linearne nezavisle
 	
-    //matica p na vypocet sustavy rovnic
+//matica p na vypocet sustavy rovnic
+	
 	for (i=0;i<p->rows;i++){
 		for (j=0;j<p->cols;j++){
 			ELEM(p,i,j)=0;
@@ -275,10 +269,10 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 	}
 	mat_print(p);
 
-    //ak je nula na diagonale treba poprehadzovat riadky
-    nula_na_diagonale(p,b);
+//ak je nula na diagonale treba poprehadzovat riadky	
+   
+nula_na_diagonale(p,b);
 
-<<<<<<< HEAD
 //ak by sa nahodou aj po prehadzovani stale nachadzala nula na diagonale znamena to ze sa tato sustava neda vyriesit
 for(i=0;i<p->rows;i++){
 		if(ELEM(p,i,i)==0){
@@ -287,15 +281,6 @@ for(i=0;i<p->rows;i++){
 		}	
 	}
 //diagonalna matica, gaussova eliminacia	
-=======
-    //ak by sa nahodou aj po prehadzovani stale nachadzala nula na diagonale znamena to ze sa tato sustava neda vyriesit
-    for(i=0;i<p->rows;i++){
-            if(ELEM(p,i,i)==0){
-                return 0;
-            }	
-        }
-    //diagonalna matica	
->>>>>>> 3667b4915f74dc0214477c8aa6c1934c0b6c58e7
 	
    for(k=0; k<p->cols; k++){
        for(i=k+1; i<p->cols; i++){
@@ -318,13 +303,8 @@ for(i=0;i<p->rows;i++){
 		    b->elem[i] -= B*b->elem[k];
         }
 	}
-<<<<<<< HEAD
 	mat_print(p);
 //ak sa po uprave do diagonalneho tvaru stane ze sa na diagonale nachadza nula tak su jednotlive riadky matice a linearne zavisle a tym padom sa neda sustava rovnic vyriesit
-=======
-
-    //ak sa po uprave do diagonalneho tvaru stane ze sa na diagonale nachadza nula tak su jednotlive riadky matice a linearne zavisle a tym padom sa neda sustava rovnic vyriesit
->>>>>>> 3667b4915f74dc0214477c8aa6c1934c0b6c58e7
 	for(i=0;i<p->rows;i++){
 		if(ELEM(p,i,i)==0){
 			return 0;
@@ -333,7 +313,7 @@ for(i=0;i<p->rows;i++){
 	}
 	
 	
-    //vypocet prvkov matice c
+//vypocet prvkov matice c
 	for (i=0;i<p->rows;i++){
 		for (j=0;j<p->cols;j++){
 			if(i==j){
@@ -342,35 +322,31 @@ for(i=0;i<p->rows;i++){
 		}
 	}
 
-<<<<<<< HEAD
 	return 0;
 	mat_destroy(p);
-=======
-	free(p);
->>>>>>> 3667b4915f74dc0214477c8aa6c1934c0b6c58e7
 }
 
 int main(){
 	srand(time(NULL));
 	//MAT *a = mat_create_by_file("matica.bin");
 	MAT *a = mat_create_with_type(4,4);
-	/*MAT *b = mat_create_with_type(4,4);
+	MAT *b = mat_create_with_type(4,4);
 	MAT *c = mat_create_with_type(4,4);
 	mat_cele(a);
 	mat_print(a);
 	mat_cele(b);
 	mat_print(b);
 	mat_division(a,b,c);
-	mat_print(c);*/
-	mat_random(a);
-	mat_print(a);
-	mat_save(a,"matice.bin");
+	mat_print(c);
+	//mat_random(a);
+	//mat_print(a);
+	//mat_save(a,"matice.bin");
 	
-	MAT *b = mat_create_by_file("matice.bin");
-	mat_print(b);
+	//MAT *b = mat_create_by_file("matice.bin");
+	//mat_print(b);
 	
 	
 	mat_destroy(a);
 	mat_destroy(b);
-	//mat_destroy(c);
+	mat_destroy(c);
 }
