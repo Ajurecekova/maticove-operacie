@@ -51,22 +51,38 @@ MAT *mat_create_by_file(char * filename){
 		{
 		return 0;
 		}
+	
 
 	
-	if (read(fd,pole,sizeof(char)*2) == 0)
+	if (read(fd,pole,sizeof(char)*2) == 0){
+		close(fd);
 		return 0;
-	
-	
-	if(read(fd,&r,sizeof(unsigned int))== 0)
+	}
+	if(pole[0]!='M'|| pole[1]!='1'){
+		close(fd);
 		return 0;
+	}
 	
-	if (read(fd,&c,sizeof(unsigned int))== 0)
+	if(read(fd,&r,sizeof(unsigned int))== 0){
+		close(fd);
 		return 0;
+	}
+	
+	if (read(fd,&c,sizeof(unsigned int))== 0){
+		close(fd);
+		return 0;
+	}
 	MAT *a = mat_create_with_type(r,c);
+	if (a==NULL){
+		close(fd);
+		return 0;
+	}
 	for(i=0;i<a->rows;i++){
 		for(j=0;j<a->cols;j++){
-			if (read(fd,&elem,sizeof(float))==0)
+			if (read(fd,&elem,sizeof(float))==0){
+				close(fd);
 				return 0;
+			}
 			ELEM(a,i,j)=elem;
 		}
 	}
@@ -88,14 +104,22 @@ char mat_save(MAT *mat,char *filename){
 		return 0;
 		}
 	
-	if(write(fd,pole,sizeof(char)*2)==0)
+	if(write(fd,pole,sizeof(char)*2)==0){
+		close(fd);
 		return 0;
-	if(write(fd,&(mat->rows),sizeof(unsigned int))==0)
+	}
+	if(write(fd,&(mat->rows),sizeof(unsigned int))==0){
+		close(fd);
 		return 0;
-	if(write(fd,&(mat->cols),sizeof(unsigned int))==0)
+	}
+	if(write(fd,&(mat->cols),sizeof(unsigned int))==0){
+		close(fd);
 		return 0;
-	if(write(fd,(mat->elem),sizeof(float)* (mat->rows)* (mat->cols))==0)
+	}
+	if(write(fd,(mat->elem),sizeof(float)* (mat->rows)* (mat->cols))==0){
+		close(fd);
 		return 0;
+	}
 	
 	
 	close(fd);
@@ -189,6 +213,9 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 	int i,j,k,l,m,t;
 	float B,M, temp=0;
 	MAT *p = mat_create_with_type(b->rows*b->cols,a->cols*b->cols);
+	/*if (p == NULL){
+		return 0;
+	}*/
 	for(i=0;i<c->rows;i++){
 		for(j=0;j<c->cols;j++){
 			ELEM(c,i,j)=0;
@@ -196,6 +223,7 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 	}
 	if (c->rows!=a->cols || c->cols!=b->cols || c->rows!=b->rows){
 		return 0;
+		mat_destroy(p);
 	}
 	
 		
@@ -206,8 +234,10 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 			if(ELEM(a,i,j)!=0)
 				t++;
 		}
-		if (t==0)
+		if (t==0){
+		
 		return 0;
+		mat_destroy(p);}
 	}
 	for(i=0;i<a->cols;i++){
 		t=0;
@@ -215,8 +245,10 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 			if(ELEM(a,j,i)!=0)
 				t++;
 		}
-		if (t==0)
+		if (t==0){
+		
 		return 0;
+		mat_destroy(p);}
 	}
 //v matici a sa nemozu nachadzat nulove riadku ani nulove stlpce lebo by tym padom neboli linearne nezavisle
 	
@@ -235,6 +267,7 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 			}
 		}
 	}
+	mat_print(p);
 
 //ak je nula na diagonale treba poprehadzovat riadky	
    
@@ -244,9 +277,10 @@ nula_na_diagonale(p,b);
 for(i=0;i<p->rows;i++){
 		if(ELEM(p,i,i)==0){
 			return 0;
+			mat_destroy(p);
 		}	
 	}
-//diagonalna matica	
+//diagonalna matica, gaussova eliminacia	
 	
    for(k=0; k<p->cols; k++){
        for(i=k+1; i<p->cols; i++){
@@ -269,10 +303,12 @@ for(i=0;i<p->rows;i++){
 		    b->elem[i] -= B*b->elem[k];
         }
 	}
+	mat_print(p);
 //ak sa po uprave do diagonalneho tvaru stane ze sa na diagonale nachadza nula tak su jednotlive riadky matice a linearne zavisle a tym padom sa neda sustava rovnic vyriesit
 	for(i=0;i<p->rows;i++){
 		if(ELEM(p,i,i)==0){
 			return 0;
+			mat_destroy(p);
 		}	
 	}
 	
@@ -282,37 +318,35 @@ for(i=0;i<p->rows;i++){
 		for (j=0;j<p->cols;j++){
 			if(i==j){
 				c->elem[i] = b->elem[i]/ELEM(p,i,j);
-				if(c->elem[i] == '0'){
-					break;
-					return 0;
-				}
 			}
 		}
 	}
 
-	free(p);
-
+	return 0;
+	mat_destroy(p);
 }
 
 int main(){
 	srand(time(NULL));
 	//MAT *a = mat_create_by_file("matica.bin");
-	MAT *a = mat_create_with_type(1,1);
-	MAT *b = mat_create_with_type(1,2);
-	MAT *c = mat_create_with_type(1,2);
+	MAT *a = mat_create_with_type(4,4);
+	/*MAT *b = mat_create_with_type(4,4);
+	MAT *c = mat_create_with_type(4,4);
 	mat_cele(a);
 	mat_print(a);
 	mat_cele(b);
 	mat_print(b);
 	mat_division(a,b,c);
-	//mat_random(a);
-	//mat_print(a);
-	//mat_save(a,"matice.bin");
+	mat_print(c);*/
+	mat_random(a);
+	mat_print(a);
+	mat_save(a,"matice.bin");
 	
-	//MAT *b = mat_create_by_file("matice.bin");
-	//mat_print(b);
-	mat_print(c);
+	MAT *b = mat_create_by_file("matice.bin");
+	mat_print(b);
+	
+	
 	mat_destroy(a);
 	mat_destroy(b);
-	mat_destroy(c);
+	//mat_destroy(c);
 }
