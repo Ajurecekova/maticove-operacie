@@ -196,6 +196,10 @@ char nula_na_diagonale(MAT *p,MAT *b){
 					       ELEM(p,j,k) = ELEM(p,i,k);
 					       ELEM(p,i,k) = temp;
 					   }
+					   if(ELEM(p,i,i)==0){
+					   		return 0;
+					   		mat_destroy(p);
+					   }
 					   temp = b->elem[j];
 					   b->elem[j] = b->elem[i];
 					   b->elem[i] = temp;
@@ -205,6 +209,37 @@ char nula_na_diagonale(MAT *p,MAT *b){
 	       }
    }
    	
+}
+
+char gaussova_eliminacia(MAT *p,MAT *b){
+	int i,j,k;
+	float M,B;
+	for(k=0; k<p->cols; k++){
+       for(i=k+1; i<p->cols; i++){
+       		nula_na_diagonale(p,b);
+		    M = ELEM(p,i,k) / ELEM(p,k,k);
+		    for(j=k; j<p->cols; j++){
+		       ELEM(p,i,j) -= M * ELEM(p,k,j);
+		    }
+		    if(ELEM(p,k,k)==0){
+				return 0;
+			}
+		    
+	    b->elem[i] -= M*b->elem[k];
+        }
+	   }
+	
+	
+	for(k=p->cols-1; k>=0; k--){
+	    for(i=k-1; i>=0; i--){
+			B = ELEM(p,i,k) / ELEM(p,k,k);
+			for(j=p->cols-1; j>=k; j--){
+			    ELEM(p,i,j) -= B * ELEM(p,k,j);
+			   }
+		    b->elem[i] -= B*b->elem[k];
+        }
+	}
+	return 1;
 }
 
 
@@ -267,50 +302,29 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 			}
 		}
 	}
-	mat_print(p);
 
 //ak je nula na diagonale treba poprehadzovat riadky	
    
 nula_na_diagonale(p,b);
 
-//ak by sa nahodou aj po prehadzovani stale nachadzala nula na diagonale znamena to ze sa tato sustava neda vyriesit
-for(i=0;i<p->rows;i++){
-		if(ELEM(p,i,i)==0){
-			return 0;
-			mat_destroy(p);
-		}	
+//diagonalna matica, gaussova eliminacia
+
+
+for (i=0;i<p->rows;i++){
+	t=0;
+	for (j=0;j<p->cols;j++){
+		if(i!=j){
+			if(ELEM(p,i,j)!=0){
+				if(gaussova_eliminacia(p,b)==0){
+					return 0;
+					mat_destroy(p);
+				}
+				
+				}
+			}
+		}
 	}
-//diagonalna matica, gaussova eliminacia	
-	
-   for(k=0; k<p->cols; k++){
-       for(i=k+1; i<p->cols; i++){
-       		nula_na_diagonale(p,b);
-		    M = ELEM(p,i,k) / ELEM(p,k,k);
-		    for(j=k; j<p->cols; j++){
-		       ELEM(p,i,j) -= M * ELEM(p,k,j);
-		    }
-	    b->elem[i] -= M*b->elem[k];
-        }
-	   }
-	
-	
-	for(k=p->cols-1; k>=0; k--){
-	    for(i=k-1; i>=0; i--){
-			B = ELEM(p,i,k) / ELEM(p,k,k);
-			for(j=p->cols-1; j>=k; j--){
-			    ELEM(p,i,j) -= B * ELEM(p,k,j);
-			   }
-		    b->elem[i] -= B*b->elem[k];
-        }
-	}
-	mat_print(p);
-//ak sa po uprave do diagonalneho tvaru stane ze sa na diagonale nachadza nula tak su jednotlive riadky matice a linearne zavisle a tym padom sa neda sustava rovnic vyriesit
-	for(i=0;i<p->rows;i++){
-		if(ELEM(p,i,i)==0){
-			return 0;
-			mat_destroy(p);
-		}	
-	}
+
 	
 	
 //vypocet prvkov matice c
