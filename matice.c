@@ -72,7 +72,8 @@ MAT *mat_create_by_file(char * filename){
 		close(fd);
 		return 0;
 	}
-	MAT *a = mat_create_with_type(r,c);
+	
+MAT *a = mat_create_with_type(r,c);
 	if (a==NULL){
 		close(fd);
 		return 0;
@@ -80,6 +81,7 @@ MAT *mat_create_by_file(char * filename){
 	for(i=0;i<a->rows;i++){
 		for(j=0;j<a->cols;j++){
 			if (read(fd,&elem,sizeof(float))==0){
+				mat_destroy(a);
 				close(fd);
 				return 0;
 			}
@@ -182,30 +184,34 @@ void mat_print(MAT *mat){
 				printf("\n");
 	}
 }
+
+void mat_rows_swap(MAT *p, MAT *b, int i, int j ,float temp,int k){
+	if(ELEM(p,j,i) !=0 && ELEM(p,i,j)!=0){
+		for(k=0; k<p->rows; k++){
+			temp = ELEM(p,j,k);
+			ELEM(p,j,k) = ELEM(p,i,k);
+			ELEM(p,i,k) = temp;
+					   }
+	if(ELEM(p,i,i)==0){
+		return 0;
+		mat_destroy(p);
+	}
+	temp = b->elem[j];
+	b->elem[j] = b->elem[i];
+	b->elem[i] = temp;	
+}
+}
+
 char nula_na_diagonale(MAT *p,MAT *b){
 	int i,j,k;
 	float temp;
 	   for(i=0; i<p->rows; i++){
 	       if(ELEM(p,i,i)==0){
 			   for(j=0; j<p->cols; j++){
-			       if(j==i) 
-						continue;
-			       if(ELEM(p,j,i) !=0 && ELEM(p,i,j)!=0){
-					   for(k=0; k<p->rows; k++){
-					       temp = ELEM(p,j,k);
-					       ELEM(p,j,k) = ELEM(p,i,k);
-					       ELEM(p,i,k) = temp;
-					   }
-					   if(ELEM(p,i,i)==0){
-					   		return 0;
-					   		mat_destroy(p);
-					   }
-					   temp = b->elem[j];
-					   b->elem[j] = b->elem[i];
-					   b->elem[i] = temp;
-					   break;
-			       }
-		   }
+			   	if(j==i)
+			   	continue;
+			    mat_rows_swap(p,b,i,j,temp,k);
+		   		}
 	       }
    }
    	
@@ -242,8 +248,6 @@ char gaussova_eliminacia(MAT *p,MAT *b){
 	return 1;
 }
 
-
-
 char mat_division (MAT *a, MAT *b ,MAT *c){
 	int i,j,k,l,m,t;
 	float B,M, temp=0;
@@ -260,9 +264,6 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 		return 0;
 		mat_destroy(p);
 	}
-	
-		
-//obmedzila som maticu c tak ze musi byt rovnakeho typu ako matica b pretoze inak by mi nevznikalo n rovnic o n neznamych a to vytvara problemy
 	for(i=0;i<a->rows;i++){
 		t=0;
 		for(j=0;j<a->cols;j++){
@@ -285,9 +286,6 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 		return 0;
 		mat_destroy(p);}
 	}
-//v matici a sa nemozu nachadzat nulove riadku ani nulove stlpce lebo by tym padom neboli linearne nezavisle
-	
-//matica p na vypocet sustavy rovnic
 	
 	for (i=0;i<p->rows;i++){
 		for (j=0;j<p->cols;j++){
@@ -301,33 +299,25 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 				ELEM(p,(((b->cols)*k)+i),j*(b->cols)+i) = ELEM(a,k,j);
 			}
 		}
-	}
-
-//ak je nula na diagonale treba poprehadzovat riadky	
+	}	
    
-nula_na_diagonale(p,b);
+	nula_na_diagonale(p,b);
 
-//diagonalna matica, gaussova eliminacia
-
-
-for (i=0;i<p->rows;i++){
-	t=0;
-	for (j=0;j<p->cols;j++){
-		if(i!=j){
-			if(ELEM(p,i,j)!=0){
-				if(gaussova_eliminacia(p,b)==0){
-					return 0;
-					mat_destroy(p);
-				}
-				
+	for (i=0;i<p->rows;i++){
+		t=0;
+		for (j=0;j<p->cols;j++){
+			if(i!=j){
+				if(ELEM(p,i,j)!=0){
+					if(gaussova_eliminacia(p,b)==0){
+						return 0;
+						mat_destroy(p);
+					}
+					
+					}
 				}
 			}
 		}
-	}
-
-	
-	
-//vypocet prvkov matice c
+		
 	for (i=0;i<p->rows;i++){
 		for (j=0;j<p->cols;j++){
 			if(i==j){
