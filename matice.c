@@ -36,6 +36,10 @@ MAT *mat_create_with_type(unsigned int rows, unsigned int cols){
 	
 	return a;
 }
+void mat_destroy(MAT *mat){
+	free(mat);
+	free(mat->elem);
+}
 
 MAT *mat_create_by_file(char * filename){
 	unsigned int i,j;
@@ -129,12 +133,6 @@ char mat_save(MAT *mat,char *filename){
 }
 
 
-void mat_destroy(MAT *mat){
-	free(mat);
-	free(mat->elem);
-}
-
-
 
 void mat_unit(MAT *mat){
 	int i,j;
@@ -193,7 +191,6 @@ void mat_rows_swap(MAT *p, MAT *b, int i, int j ,float temp,int k){
 			ELEM(p,i,k) = temp;
 					   }
 	if(ELEM(p,i,i)==0){
-		return 0;
 		mat_destroy(p);
 	}
 	temp = b->elem[j];
@@ -220,9 +217,11 @@ char nula_na_diagonale(MAT *p,MAT *b){
 char gaussova_eliminacia(MAT *p,MAT *b){
 	int i,j,k;
 	float M,B;
+	
+//na horny trojuholnikovy
 	for(k=0; k<p->cols; k++){
+		nula_na_diagonale(p,b);
        for(i=k+1; i<p->cols; i++){
-       		nula_na_diagonale(p,b);
 		    M = ELEM(p,i,k) / ELEM(p,k,k);
 		    for(j=k; j<p->cols; j++){
 		       ELEM(p,i,j) -= M * ELEM(p,k,j);
@@ -235,7 +234,7 @@ char gaussova_eliminacia(MAT *p,MAT *b){
         }
 	   }
 	
-	
+//cisla len na diagonale	
 	for(k=p->cols-1; k>=0; k--){
 	    for(i=k-1; i>=0; i--){
 			B = ELEM(p,i,k) / ELEM(p,k,k);
@@ -286,7 +285,7 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 		return 0;
 		mat_destroy(p);}
 	}
-	
+//vytvorenie p	
 	for (i=0;i<p->rows;i++){
 		for (j=0;j<p->cols;j++){
 			ELEM(p,i,j)=0;
@@ -300,24 +299,12 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 			}
 		}
 	}	
-   
+//uprava p   
 	nula_na_diagonale(p,b);
+	gaussova_eliminacia(p,b);
 
-	for (i=0;i<p->rows;i++){
-		t=0;
-		for (j=0;j<p->cols;j++){
-			if(i!=j){
-				if(ELEM(p,i,j)!=0){
-					if(gaussova_eliminacia(p,b)==0){
-						return 0;
-						mat_destroy(p);
-					}
-					
-					}
-				}
-			}
-		}
-		
+
+//vytvorenie c		
 	for (i=0;i<p->rows;i++){
 		for (j=0;j<p->cols;j++){
 			if(i==j){
