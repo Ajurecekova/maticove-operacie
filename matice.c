@@ -170,15 +170,16 @@ void mat_print(MAT *mat){
 }
 
 void mat_rows_swap(MAT *p, MAT *b, int i, int j ,float temp,int k){
-	if(ELEM(p,j,i) !=0 && ELEM(p,i,j)!=0){
-		for(k=0; k<p->rows; k++){
-			temp = ELEM(p,j,k);
-			ELEM(p,j,k) = ELEM(p,i,k);
-			ELEM(p,i,k) = temp;
-		}
-        if(ELEM(p,i,i)==0){
-            mat_destroy(p);
+    if(ELEM(p,j,i) !=0 && ELEM(p,i,j)!=0){
+        for(k=0; k<p->rows; k++){
+            temp = ELEM(p,j,k);
+            ELEM(p,j,k) = ELEM(p,i,k);
+            ELEM(p,i,k) = temp;
         }
+        
+        if(ELEM(p,i,i)==0)
+            mat_destroy(p);
+
         temp = b->elem[j];
         b->elem[j] = b->elem[i];
         b->elem[i] = temp;	
@@ -188,15 +189,14 @@ void mat_rows_swap(MAT *p, MAT *b, int i, int j ,float temp,int k){
 char nula_na_diagonale(MAT *p,MAT *b){
 	int i,j,k;
 	float temp;
-	   for(i=0; i<p->rows; i++){
-	       if(ELEM(p,i,i)==0){
-			   for(j=0; j<p->cols; j++){
-			   	if(j==i)
-			   	continue;
+
+	for(i=0; i<p->rows; i++)
+        if(ELEM(p,i,i)==0)
+            for(j=0; j<p->cols; j++){
+                if(j==i)
+                    continue;
 			    mat_rows_swap(p,b,i,j,temp,k);
-		   		}
-	       }
-   }
+		   	}
    	
 }
 
@@ -309,12 +309,14 @@ int main(){
 	MAT *a = mat_create_with_type(4,4);
 	MAT *b = mat_create_with_type(4,4);
 	MAT *c = mat_create_with_type(4,4);
-	mat_cele(a);
+
+	mat_random(a);
 	mat_print(a);
-	mat_cele(b);
+	mat_random(b);
 	mat_print(b);
 	mat_division(a,b,c);
 	mat_print(c);
+
 	//mat_random(a);
 	//mat_print(a);
 	//mat_save(a,"matice.bin");
