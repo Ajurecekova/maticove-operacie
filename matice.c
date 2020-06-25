@@ -48,21 +48,16 @@ MAT *mat_create_by_file(char * filename){
 	unsigned int r;
 	unsigned int c;
 	float elem;
-	
-	
+    MAT *a;
 	
 	if( (fd = open(filename,O_BINARY | O_RDONLY)) < 0 )
-		{
 		return 0;
-		}
-	
 
-	
 	if (read(fd,pole,sizeof(char)*2) == 0){
 		close(fd);
 		return 0;
 	}
-	if(pole[0]!='M'|| pole[1]!='1'){
+	if(pole[0]!='M' || pole[1]!='1'){
 		close(fd);
 		return 0;
 	}
@@ -77,11 +72,12 @@ MAT *mat_create_by_file(char * filename){
 		return 0;
 	}
 	
-MAT *a = mat_create_with_type(r,c);
+    a = mat_create_with_type(r,c);
 	if (a==NULL){
 		close(fd);
 		return 0;
 	}
+
 	for(i=0;i<a->rows;i++){
 		for(j=0;j<a->cols;j++){
 			if (read(fd,&elem,sizeof(float))==0){
@@ -132,8 +128,6 @@ char mat_save(MAT *mat,char *filename){
 	return 0;
 }
 
-
-
 void mat_unit(MAT *mat){
 	int i,j;
 	
@@ -146,9 +140,6 @@ void mat_unit(MAT *mat){
 	
 }
 
-
-
-
 void mat_random(MAT *mat){
 	int i;
 	
@@ -158,8 +149,6 @@ void mat_random(MAT *mat){
 	
 }
 
-
-
 void mat_cele(MAT *mat){
 	int i;
 	
@@ -167,9 +156,6 @@ void mat_cele(MAT *mat){
 		mat->elem[i]=rand()%6;
 	}
 }
-
-
-
 
 void mat_print(MAT *mat){
 	int i;
@@ -183,34 +169,40 @@ void mat_print(MAT *mat){
 	}
 }
 
-void mat_rows_swap(MAT *p, MAT *b, int i, int j ,float temp,int k){
-	if(ELEM(p,j,i) !=0 && ELEM(p,i,j)!=0){
-		for(k=0; k<p->rows; k++){
-			temp = ELEM(p,j,k);
-			ELEM(p,j,k) = ELEM(p,i,k);
-			ELEM(p,i,k) = temp;
-					   }
-	if(ELEM(p,i,i)==0){
-		mat_destroy(p);
+char mat_rows_swap(MAT *p, MAT *b, int i, int j ,float temp,int k){
+    
+    for(k=0; k<p->rows; k++){
+        temp = ELEM(p,j,k);
+        ELEM(p,j,k) = ELEM(p,i,k);
+        ELEM(p,i,k) = temp;
+    }
+        
+    if(ELEM(p,i,i)==0){
+    	return 0;
 	}
-	temp = b->elem[j];
-	b->elem[j] = b->elem[i];
-	b->elem[i] = temp;	
-}
+        
+
+    temp = b->elem[j];
+    b->elem[j] = b->elem[i];
+    b->elem[i] = temp;	
+    return 1;
 }
 
 char nula_na_diagonale(MAT *p,MAT *b){
 	int i,j,k;
 	float temp;
-	   for(i=0; i<p->rows; i++){
-	       if(ELEM(p,i,i)==0){
-			   for(j=0; j<p->cols; j++){
-			   	if(j==i)
-			   	continue;
-			    mat_rows_swap(p,b,i,j,temp,k);
-		   		}
-	       }
-   }
+
+	for(i=0; i<p->rows; i++)
+        if(ELEM(p,i,i)==0)
+            for(j=0; j<p->cols; j++){
+                if(j==i)
+                    continue;
+                if(ELEM(p,j,i) !=0 && ELEM(p,i,j)!=0){
+                	if(mat_rows_swap(p,b,i,j,temp,k)==0){
+                		return 0;
+					}
+				}
+		   	}
    	
 }
 
@@ -218,23 +210,25 @@ char gaussova_eliminacia(MAT *p,MAT *b){
 	int i,j,k;
 	float M,B;
 	
-//na horny trojuholnikovy
-	for(k=0; k<p->cols; k++){
-		nula_na_diagonale(p,b);
-       for(i=k+1; i<p->cols; i++){
-		    M = ELEM(p,i,k) / ELEM(p,k,k);
-		    for(j=k; j<p->cols; j++){
-		       ELEM(p,i,j) -= M * ELEM(p,k,j);
-		    }
-		    if(ELEM(p,k,k)==0){
+    //na horny trojuholnikovy
+    for(k=0; k<p->cols; k++){
+	    if(nula_na_diagonale(p,b)==0){
+	    	return 0;
+		}
+	    for(i=k+1; i<p->cols; i++){
+	        M = ELEM(p,i,k) / ELEM(p,k,k);
+			for(j=k; j<p->cols; j++){
+			    ELEM(p,i,j) -= M * ELEM(p,k,j);
+			}
+			if(ELEM(p,k,k)==0){
 				return 0;
 			}
-		    
-	    b->elem[i] -= M*b->elem[k];
-        }
-	   }
+			    
+		    b->elem[i] -= M*b->elem[k];
+	    }
+    }
 	
-//cisla len na diagonale	
+    //cisla len na diagonale	
 	for(k=p->cols-1; k>=0; k--){
 	    for(i=k-1; i>=0; i--){
 			B = ELEM(p,i,k) / ELEM(p,k,k);
@@ -244,6 +238,7 @@ char gaussova_eliminacia(MAT *p,MAT *b){
 		    b->elem[i] -= B*b->elem[k];
         }
 	}
+
 	return 1;
 }
 
@@ -260,8 +255,8 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 		}
 	}
 	if (c->rows!=a->cols || c->cols!=b->cols || c->rows!=b->rows){
-		return 0;
 		mat_destroy(p);
+		return 0;
 	}
 	for(i=0;i<a->rows;i++){
 		t=0;
@@ -270,9 +265,8 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 				t++;
 		}
 		if (t==0){
-		
-		return 0;
-		mat_destroy(p);}
+		mat_destroy(p);
+		return 0;}
 	}
 	for(i=0;i<a->cols;i++){
 		t=0;
@@ -281,9 +275,9 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 				t++;
 		}
 		if (t==0){
-		
+		mat_destroy(p);
 		return 0;
-		mat_destroy(p);}
+		}
 	}
 //vytvorenie p	
 	for (i=0;i<p->rows;i++){
@@ -300,9 +294,10 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 		}
 	}	
 //uprava p   
-	nula_na_diagonale(p,b);
-	gaussova_eliminacia(p,b);
-
+	if(gaussova_eliminacia(p,b)==0){
+		mat_destroy(p);
+		return 0;
+	}
 
 //vytvorenie c		
 	for (i=0;i<p->rows;i++){
@@ -313,22 +308,25 @@ char mat_division (MAT *a, MAT *b ,MAT *c){
 		}
 	}
 
-	return 0;
+
 	mat_destroy(p);
+	return 0;
 }
 
 int main(){
 	srand(time(NULL));
 	//MAT *a = mat_create_by_file("matica.bin");
 	MAT *a = mat_create_with_type(4,4);
-	MAT *b = mat_create_with_type(4,4);
-	MAT *c = mat_create_with_type(4,4);
-	mat_cele(a);
+	MAT *b = mat_create_with_type(4,3);
+	MAT *c = mat_create_with_type(4,3);
+
+	mat_random(a);
 	mat_print(a);
-	mat_cele(b);
+	mat_random(b);
 	mat_print(b);
 	mat_division(a,b,c);
 	mat_print(c);
+
 	//mat_random(a);
 	//mat_print(a);
 	//mat_save(a,"matice.bin");
